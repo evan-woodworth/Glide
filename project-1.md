@@ -38,7 +38,7 @@ Your app must:
 * **Consult documentation resources** \(MDN, etc.\) to better understand what you'll be getting into.
 * **Don't be afraid to write code that you know you will have to remove later.** Create temporary elements \(buttons, links, etc\) that trigger events if real data is not available. For example, if you're trying to figure out how to change some text when the game is over but you haven't solved the win/lose game logic, you can create a button to simulate that until then.
 
-## [Example Projects](https://romebell.gitbook.io/sei-1019/projects/past-projects/project1)
+## [Example Projects](https://romebell.gitbook.io/sei-412/projects/past-projects/project1)
 
 ## Getting Started with a Git Repo
 
