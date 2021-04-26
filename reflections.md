@@ -2,9 +2,19 @@
 - [x] What did you achieve over the weekend?
 - [x] What are your goals for today?
 - [x] Do you have any blockers?
-1. RESPONSE
-2. RESPONSE
-3. RESPONSE
+1. Over the weekend I decided on what game I should make and made established a working viewport for the game.
+    Glide
+        Glide ever downward (until you reach the ground, anyways)
+        Avoid enemies and obstacles
+        Drop bombs and items
+        Get power-ups and ammo
+        Use updrafts to fly upward
+        Get scored
+        Defeat enemies
+        Collect coins
+        Survive
+2. Today I hope to set up the overall structure of the game, and have a very basic working example of gamepley.
+3. Not at this time.
 
 # Monday
 - [x] What did you achieve yesterday?
