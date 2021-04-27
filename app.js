@@ -1,14 +1,21 @@
-// GLOBAL DOM VARIABLES
+// ===================== GLOBAL VARIABLES AND OBJECTS ====================== //
 
+//DOM references
 const game = document.getElementById('game');
 const height = document.getElementById('height');
 const lives = document.getElementById('lives');
 const score = document.getElementById('score');
 const powerUps = document.getElementById('power-ups');
 const status = document.getElementById('status');
-game.style.backgroundPositionY = '0px';
-let entityArray = [];
-let gameOn = false;
+
+//DOM management variables
+let playerScore = 0;
+let playerLives = 5; //initialized by difficulty selection
+let playerStatus = "Ready?";
+let playerPowerUps = "None";
+let platformCount = 20; //dependent on difficulty
+
+//height variables
 let viewportY = 0;
 let playerFallSpeed = -15;
 let playerGliderSpeed = 10;
@@ -17,17 +24,41 @@ let playerFallModifier = -10;
 let playerFall = true;
 let playerGlider = true;
 let playerGust = false;
-let progress = 0;
+let playerStartHeight = 75; //dependent on difficulty
+const backgroundImageHeight = 480; //dependent on background image
+
+//game management variables
+let gameOn = false;
 let playerDistance = 0;
-let obstacleSeparation = 350;
-let playerScore = 0;
-let playerStartHeight = 0;
-let playerLives = 0;
-let playerStatus = "Ready?";
-let playerPowerUps = "None";
-let platformCount = 20;
+let obstacleSeparation = 400; //dependent on difficulty
 let weaponRecharge = false;
-const backgroundImageHeight = 480;
+let entityArray = []; //all non-unique entities should be stored here
+let difficulty = 'easy';
+
+const difficultyOptions = {
+    easy: {
+        title: 'Easy',
+        obstacleSeparation: 400,
+        playerStartHeight: 300,
+        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        playerLives: 5
+    },
+    hard: {
+        title: 'Hard',
+        obstacleSeparation: 300,
+        playerStartHeight: 500,
+        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        playerLives: 3
+    },
+    impossible: {
+        title: 'Impossible',
+        obstacleSeparation: 200,
+        playerStartHeight: 1000,
+        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        playerLives: 1
+    }
+};
+
 
 // ====================== SETUP FOR CANVAS RENDERING ======================= //
 
@@ -124,6 +155,10 @@ function Obstacle(y=game.height, color=0){
 }
 
 class Hero extends Entity {
+    constructor(x, y, color, radius) {
+        super(x, y, color, radius);
+        this.gliderDirection = 'down';
+    }
     render(){
         //set fillStyle to radial gradient
         const gradient = ctx.createRadialGradient(this.x,this.y,this.radius/2, this.x,this.y,this.radius)
@@ -133,7 +168,29 @@ class Hero extends Entity {
         this.fillStyle = gradient;
         //then render
         super.render();
-    }
+        //then draw the glider
+        ctx.fillStyle = 'black';
+        //determine direction and render
+        if (this.gliderDirection === "down") {
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y-this.radius-5);
+            ctx.lineTo(this.x+this.radius+5, this.y-this.radius*2-5);
+            ctx.lineTo(this.x-this.radius-5, this.y-this.radius*2-5);
+            ctx.fill();
+        } else if (this.gliderDirection === "right") {
+            ctx.beginPath();
+            ctx.moveTo(this.x-this.radius-2, this.y-this.radius-5);
+            ctx.lineTo(this.x-this.radius+2, this.y-this.radius*2-5);
+            ctx.lineTo(this.x+this.radius+10, this.y-this.radius*2+5);
+            ctx.fill();
+        } else if (this.gliderDirection === "left") {
+            ctx.beginPath();
+            ctx.moveTo(this.x+this.radius+2, this.y-this.radius-5);
+            ctx.lineTo(this.x+this.radius-2, this.y-this.radius*2-5);
+            ctx.lineTo(this.x-this.radius-10, this.y-this.radius*2+5);
+            ctx.fill();
+        }
+    };
 }
 
 var hero = new Hero(game.width/2, 100, 'black', 15);
@@ -148,8 +205,6 @@ function drawCanvas(){
 	game.style.backgroundPositionY = viewportY.toString()+'px';
     if (viewportY <= -backgroundImageHeight){
         viewportY = 0;
-        //keep track of fall distance
-        progress++;
     }
     //draw entities
     for (let i=0; i<entityArray.length; i++) {
@@ -176,11 +231,6 @@ function manageHeight(){
         playerDistance -= fallDistance;
     }
 
-}
-
-function drawBox(x,y,size,color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x,y,size,size);
 }
 
 function gameStart() {
@@ -229,10 +279,10 @@ function movementHandler(e) {
         //     hero.y += 10;
         // }
         if (e.which === 65){
-            hero.x -= 20;
+            hero.x -= 15;
         }
         if (e.which === 68){
-            hero.x += 20;
+            hero.x += 15;
         }
         // if(detectHit(hero, ogre)){
         //     ogre.alive = false;
