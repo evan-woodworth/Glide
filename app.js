@@ -35,6 +35,7 @@ let obstacleSeparation = 400; //dependent on difficulty
 let weaponRecharge = false;
 let entityArray = []; //all non-unique entities should be stored here
 let difficulty = 'easy';
+let ghostMode = false;
 
 const difficultyOptions = {
     easy: {
@@ -105,11 +106,25 @@ class Entity{
         this.alive = true;
         this.fillStyle = this.color;
     };
-    render(){
+    render() {
         ctx.beginPath();
         ctx.fillStyle = this.fillStyle;
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
         ctx.fill();
+    };
+    collisionData() {
+        let theData = [];
+            theData.push(
+                {
+                    y: this.y,
+                    x1: this.x - this.radius,
+                    x2: this.x + this.radius
+                }
+            );
+        return theData;
+    };
+    collisionEffect() {
+        console.log('hit entity');
     };
 }
 
@@ -120,7 +135,7 @@ function Obstacle(y=game.height, color=0){
     this.segments = Array(this.segmentCount).fill(false);
     this.y = y;
     this.alive = false;
-    this.render = function(){
+    this.render = function() {
         ctx.fillStyle = this.color;
         for (let i=0; i<this.segments.length; i++) {
             if (this.segments[i]) {
@@ -128,7 +143,25 @@ function Obstacle(y=game.height, color=0){
             }
         }
     };
-    this.initialize = function(){
+    this.collisionData = function () {
+        let theData = [];
+            for (let i=0; i<this.segments.length; i++) {
+                if (this.segments[i]) {
+                    theData.push(
+                        {
+                            y: this.y,
+                            x1: this.width*i,
+                            x2: this.width*i + this.width
+                        }
+                    );
+                }
+            }
+        return theData;
+    };
+    this.collisionEffect = function () {
+        console.log('hit obstacle');
+    }
+    this.initialize = function() {
         this.segmentCount = (Math.floor(Math.random()*4)+2)
         this.width = game.width / this.segmentCount;
         this.segments = Array(this.segmentCount);
@@ -160,7 +193,7 @@ class Hero extends Entity {
         super(x, y, color, radius);
         this.gliderDirection = 'down';
     }
-    render(){
+    render() {
         //set fillStyle to radial gradient
         const gradient = ctx.createRadialGradient(this.x,this.y,this.radius/2, this.x,this.y,this.radius)
         gradient.addColorStop(0, 'black');
@@ -237,6 +270,14 @@ function manageHeight(){
         //adjust entity heights
         for (let i=0; i<entityArray.length; i++) {
             entityArray[i].y += fallDistance;
+            //check for collision
+            if (entityArray[i].y < hero.y + hero.radius
+                && entityArray[i].y > hero.y - hero.radius
+                && !ghostMode) {
+                    if (detectCollision(entityArray[i].collisionData()) ) {
+                        entityArray[i].collisionEffect();
+                    }
+                }
         }
         //keep track of distance traveled
         playerDistance -= fallDistance;
@@ -305,11 +346,37 @@ function gameLoop(){
 
 // ====================== COLLISION DETECTION ======================= //
 
+function detectCollision(collisionData) {
+    for (let i=0; i<collisionData.length; i++) {
+        const obst = collisionData[i];
+        //if in range of collision
+        if (   (hero.x + hero.radius) > obst.x1 
+            && (hero.x - hero.radius) < obst.x2 ) {
+            //if over corner
+            if (hero.x < obst.x1 || hero.x > obst.x2) {
+                //c^2 = a^2 + b^2
+                //c = sqrt(a^2 + b^2)
+                const dy = hero.y - obst.y;
+                const dx1 = hero.x - obst.x1;
+                const dx2 = hero.x - obst.x2;
+                const distance1 = Math.sqrt(dx1*dx1+dy*dy);
+                const distance2 = Math.sqrt(dx2*dx2+dy*dy);
+                if (distance1 < hero.radius || distance2 < hero.radius ) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function detectHit(p1, p2){
-    if (   p1.x < (p2.x + p2.width) 
-        && p1.y < (p2.y + p2.height) 
-        && p2.x < (p1.x + p1.width) 
-        && p2.y < (p1.y + p1.height)) {
+    if (       hero.x < (obst.x + obst.width) 
+            && hero.y < (obst.y + obst.height) 
+            && obst.x < (hero.x + hero.width) 
+            && obst.y < (hero.y + hero.height)) {
             return true;
         }
 }
