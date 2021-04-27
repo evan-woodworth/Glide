@@ -13,10 +13,11 @@ let playerScore = 0;
 let playerLives = 5; //initialized by difficulty selection
 let playerStatus = "Ready?";
 let playerPowerUps = "None";
-let platformCount = 20; //dependent on difficulty
+let platformCount = 75; //dependent on difficulty
 
-//height variables
+//height and speed variables
 let viewportY = 0;
+let playerHorizontalSpeed = 15
 let playerFallSpeed = -15;
 let playerGliderSpeed = 10;
 let playerGustSpeed = 15;
@@ -24,7 +25,7 @@ let playerFallModifier = -10;
 let playerFall = true;
 let playerGlider = true;
 let playerGust = false;
-let playerStartHeight = 75; //dependent on difficulty
+let playerStartHeight = 300; //dependent on difficulty
 const backgroundImageHeight = 480; //dependent on background image
 
 //game management variables
@@ -196,7 +197,7 @@ class Hero extends Entity {
 var hero = new Hero(game.width/2, 100, 'black', 15);
 
 // ====================== HELPER FUNCTIONS ======================= //
-// SANDBOX FOR TESTING PAINTING TECHNIQUES 
+// CANVAS functions 
 function clearCanvas(){
     ctx.clearRect(0,0,game.width,game.height);
 }
@@ -214,6 +215,16 @@ function drawCanvas(){
     hero.render();
 };
 
+function updateDisplay() {
+    height.innerText = `Height: ${playerStartHeight - Math.floor(playerDistance/100)}m`;
+    lives.innerText = `Lives: ${playerLives}`;
+    score.innerText = `Score: ${playerScore}`;
+    powerUps.innerText = `Power Up: ${playerPowerUps}`;
+    status.innerText = playerStatus;
+}
+
+//management functions
+
 function manageHeight(){
     //determine fall distance
     let fallDistance = Number(`${playerFall?playerFallSpeed:0}`) 
@@ -230,7 +241,14 @@ function manageHeight(){
         //keep track of distance traveled
         playerDistance -= fallDistance;
     }
+}
 
+function manageGlide() {
+    if (hero.gliderDirection === 'left') {
+        hero.x -= playerHorizontalSpeed;
+    } else if (hero.gliderDirection === 'right') {
+        hero.x += playerHorizontalSpeed;
+    }
 }
 
 function gameStart() {
@@ -241,14 +259,6 @@ function gameStart() {
     }
     playerFallModifier = 0;
     gameOn = true;
-}
-
-function updateDisplay() {
-    height.innerText = `Height: ${playerStartHeight - Math.floor(playerDistance/100)}m`;
-    lives.innerText = `Lives: ${playerLives}`;
-    score.innerText = `Score: ${playerScore}`;
-    powerUps.innerText = `Power Ups: ${playerPowerUps}`;
-    status.innerText = playerStatus;
 }
 
 
@@ -269,35 +279,24 @@ function updateDisplay() {
 
 
 
-//  KEYBOARD INTERACTION LOGIC 
+//event listeners and keyboard interaction logic 
 function movementHandler(e) {
     if(gameOn){
-        // if (e.which === 87){
-
-        // }
-        // if (e.which === 83){
-        //     hero.y += 10;
-        // }
         if (e.which === 65){
-            hero.x -= 15;
+            hero.gliderDirection = 'left';
         }
         if (e.which === 68){
-            hero.x += 15;
+            hero.gliderDirection = 'right';
         }
-        // if(detectHit(hero, ogre)){
-        //     ogre.alive = false;
-        // }
     }
-
-
     // key event codes - here https://keycode.info/
 }
-
 
 // ====================== GAME PROCESSES ======================= //
 
 function gameLoop(){
     manageHeight();
+    manageGlide();
     clearCanvas();
     drawCanvas();
     updateDisplay();
@@ -323,5 +322,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const runGame = setInterval(gameLoop, 60);
 })
 
-// KEYPRESS LISTENER
 
