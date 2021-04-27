@@ -13,11 +13,23 @@
         <aside id="top-middle"><h2 id="height">Height: 100m</h2></aside>
         <aside id="top-right"><h2 id="lives">Lives: 0</h2></aside>
         <main>
-            <canvas id="game"><!-- play it, a game --></canvas>
+            <canvas id="game"></canvas>
         </main>
         <aside id="btm-left"><h2 id="score">Score: 0</h2></aside>
-        <aside id="btm-middle"><h2 id="power-ups">Power Ups</h2></aside>
-        <aside id="btm-right"><h2 id="status">play the game</h2></aside>
+        <aside id="btm-middle">
+            <form id="start-screen" class="unhidden">
+                <h2>Choose Difficulty:</h2>
+                <button type = "button" id="easy">Easy</button>
+                <button type = "button" id="hard">Hard</button>
+                <button type = "button" id="impossible">Impossible</button>
+            </form>
+            <h2 id="power-ups" class="hidden">Power Ups</h2>
+            <form id="end-screen" class="hidden">
+                <h2 id="end-game-text"></h2>
+                <button type = "button" id="reset">Restart!</button>
+            </form>
+        </aside>
+        <aside id="btm-right"><h2 id="status">Ready?</h2></aside>
     </div>
     <script src="./app.js"></script>
 </body>

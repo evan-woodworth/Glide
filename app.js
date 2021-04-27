@@ -7,6 +7,13 @@ const lives = document.getElementById('lives');
 const score = document.getElementById('score');
 const powerUps = document.getElementById('power-ups');
 const status = document.getElementById('status');
+const easyButton = document.getElementById('easy');
+const hardButton = document.getElementById('hard');
+const impossibleButton = document.getElementById('impossible');
+const resetButton = document.getElementById('reset');
+const startScreen = document.getElementById('start-screen');
+const endGameWindow = document.getElementById('end-screen');
+const endGameText = document.getElementById('end-game-text');
 
 //DOM management variables
 let playerScore = 0;
@@ -36,27 +43,28 @@ let weaponRecharge = false;
 let entityArray = []; //all non-unique entities should be stored here
 let difficulty = 'easy';
 let ghostMode = false;
+let gameOver = false;
 
 const difficultyOptions = {
     easy: {
         title: 'Easy',
         obstacleSeparation: 400,
         playerStartHeight: 300,
-        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        platformCount: 75,
         playerLives: 5
     },
     hard: {
         title: 'Hard',
         obstacleSeparation: 300,
         playerStartHeight: 500,
-        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        platformCount: 170,
         playerLives: 3
     },
     impossible: {
         title: 'Impossible',
         obstacleSeparation: 200,
         playerStartHeight: 1000,
-        platformCount: Math.floor((this.playerStartHeight*100)/this.obstacleSeparation)+1,
+        platformCount: 500,
         playerLives: 1
     }
 };
@@ -159,7 +167,7 @@ function Obstacle(y=game.height, color=0){
         return theData;
     };
     this.collisionEffect = function () {
-        console.log('hit obstacle');
+        gameEnd('Lose');
     }
     this.initialize = function() {
         this.segmentCount = (Math.floor(Math.random()*4)+2)
@@ -285,11 +293,15 @@ function manageHeight(){
 }
 
 function manageGlide() {
-    if (hero.gliderDirection === 'left') {
-        hero.x -= playerHorizontalSpeed;
-    } else if (hero.gliderDirection === 'right') {
-        hero.x += playerHorizontalSpeed;
-    }
+    //if the player is not up against the edge of the screen, move in the direction of the glider
+    if ( hero.x + hero.radius < game.width 
+        && hero.x - hero.radius > 0 ) {
+            if (hero.gliderDirection === 'left') {
+                hero.x -= playerHorizontalSpeed;
+            } else if (hero.gliderDirection === 'right') {
+                hero.x += playerHorizontalSpeed;
+            }
+        }
 }
 
 function gameStart() {
@@ -302,6 +314,17 @@ function gameStart() {
     gameOn = true;
 }
 
+function gameEnd(endStatus) {
+    //end the game
+    gameOn = false;
+    gameOver = true;
+    clearInterval();
+    //set endgame text
+    endGameText.innerText = `You ${endStatus}! Play again?`;
+    //show endgame text
+    powerUps.className = "hidden";
+    endGameWindow.className = "unhidden";
+}
 
 // game.addEventListener("click", (e)=>{
 //     // clearCanvas();
@@ -314,10 +337,7 @@ function gameStart() {
 //     refreshCanvas();
 // });
 
-
-
 //  GUI 
-
 
 
 //event listeners and keyboard interaction logic 
@@ -333,15 +353,58 @@ function movementHandler(e) {
     // key event codes - here https://keycode.info/
 }
 
+resetButton.addEventListener('click', () => {
+    location.reload();
+})
+easyButton.addEventListener('click', () => {
+    //intialize diffictulty settings
+    obstacleSeparation = difficultyOptions.easy.obstacleSeparation;
+    playerStartHeight = difficultyOptions.easy.playerStartHeight;
+    platformCount = difficultyOptions.easy.platformCount;
+    playerLives = difficultyOptions.easy.playerLives;
+    //swap windows
+    startScreen.className = "hidden";
+    powerUps.className = "unhidden";
+    //start game
+    gameStart();
+})
+hardButton.addEventListener('click', () => {
+    //intialize diffictulty settings
+    obstacleSeparation = difficultyOptions.hard.obstacleSeparation;
+    playerStartHeight = difficultyOptions.hard.playerStartHeight;
+    platformCount = difficultyOptions.hard.platformCount;
+    playerLives = difficultyOptions.hard.playerLives;
+    //swap windows
+    startScreen.className = "hidden";
+    powerUps.className = "unhidden";
+    //start game
+    gameStart();
+})
+impossibleButton.addEventListener('click', () => {
+    //intialize diffictulty settings
+    obstacleSeparation = difficultyOptions.impossible.obstacleSeparation;
+    playerStartHeight = difficultyOptions.impossible.playerStartHeight;
+    platformCount = difficultyOptions.impossible.platformCount;
+    playerLives = difficultyOptions.impossible.playerLives;
+    //swap windows
+    startScreen.className = "hidden";
+    powerUps.className = "unhidden";
+    //start game
+    gameStart();
+})
+
 // ====================== GAME PROCESSES ======================= //
 
 function gameLoop(){
-    manageHeight();
-    manageGlide();
-    clearCanvas();
-    drawCanvas();
-    updateDisplay();
-    // console.log('game running')
+    if (!gameOver) {
+        manageHeight();
+        manageGlide();
+        clearCanvas();
+        drawCanvas();
+        updateDisplay();
+        // console.log('game running')
+    }
+
 }
 
 // ====================== COLLISION DETECTION ======================= //
@@ -370,15 +433,6 @@ function detectCollision(collisionData) {
         }
     }
     return false;
-}
-
-function detectHit(p1, p2){
-    if (       hero.x < (obst.x + obst.width) 
-            && hero.y < (obst.y + obst.height) 
-            && obst.x < (hero.x + hero.width) 
-            && obst.y < (hero.y + hero.height)) {
-            return true;
-        }
 }
 
 // ====================== PAINT INTIAL SCREEN ======================= //

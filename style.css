@@ -64,3 +64,27 @@ main {
 #btm-right {
     grid-area: btm-right;
 }
+
+.hidden {
+    display: none;
+}
+
+.unhidden {
+    display: flex;
+    align-items: center;
+}
+
+#start-screen {
+    height: 80%;
+    width: 80%;
+}
+
+#end-screen {
+    height: 80%;
+    width: 80%;
+}
+
+form {
+    display: flex;
+    justify-content: space-around;
+}
