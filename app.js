@@ -49,8 +49,8 @@ const difficultyOptions = {
     easy: {
         title: 'Easy',
         obstacleSeparation: 400,
-        playerStartHeight: 300,
-        platformCount: 75,
+        playerStartHeight: 200,
+        platformCount: 50,
         playerLives: 5
     },
     hard: {
@@ -216,6 +216,29 @@ class Hero extends Entity {
     };
 };
 
+//The ground/goal
+function Ground() {
+    this.y = playerStartHeight*100+hero.radius*4;
+    this.alive = true;
+    this.collisionData = function () {
+        return [
+            {
+                y: this.y,
+                x1: 0,
+                x2: game.width
+            }
+        ];
+    };
+    this.collisionEffect = function () {
+        gameEnd('WIN');
+    };
+    this.render = function () {
+        ctx.fillStyle = '#9b5513';
+        ctx.fillRect(0,this.y,game.width,game.height);
+    };
+}
+
+//Create the hero!
 var hero = new Hero(game.width/2, 100, 'black', 15);
 
 // ====================== HELPER FUNCTIONS ======================= //
@@ -240,7 +263,7 @@ function drawCanvas(){
 };
 
 function updateDisplay() {
-    height.innerText = `Height: ${playerStartHeight - Math.floor(playerDistance/100)}m`;
+    height.innerText = `Height: ${playerStartHeight - Math.round(playerDistance/100)}m`;
     lives.innerText = `Lives: ${playerLives}`;
     score.innerText = `Score: ${playerScore}`;
     powerUps.innerText = `Power Up: ${playerPowerUps}`;
@@ -303,9 +326,10 @@ function gameStart() {
                 'yellow', 15);
                 entityArray.push(aCoin);
             }
-
         }
     }
+    //set ground
+    entityArray.push(new Ground);
     playerFallModifier = 0;
     gameOn = true;
 };
