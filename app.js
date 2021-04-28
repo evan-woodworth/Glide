@@ -54,7 +54,9 @@ let glideReleaseSpeed = playerGliderSpeed;
 let gameOn = false;
 let playerDistance = 0;
 let obstacleSeparation = 400; //dependent on difficulty
-let weaponRecharge = false;
+let powerUpSpawnFrequency = 0; //dependent on difficulty
+let playerHasPower = false;
+let powerColor = 'orange';
 let entityArray = []; //all non-unique entities should be stored here
 let difficulty = 'easy';
 let ghostMode = false;
@@ -66,23 +68,41 @@ const difficultyOptions = {
         obstacleSeparation: 400,
         playerStartHeight: 2000,
         platformCount: 50,
-        playerLives: 5
+        playerLives: 5,
+        powerUpSpawnFrequency: 4
     },
     hard: {
         title: 'Hard',
         obstacleSeparation: 300,
         playerStartHeight: 5000,
         platformCount: 170,
-        playerLives: 3
+        playerLives: 3,
+        powerUpSpawnFrequency: 10
     },
     impossible: {
         title: 'Impossible',
         obstacleSeparation: 200,
         playerStartHeight: 10000,
         platformCount: 500,
-        playerLives: 1
+        playerLives: 1,
+        powerUpSpawnFrequency: 20
     }
 };
+
+const powerUpList = {
+    glide: {
+        title: "Hover with Spacebar",
+        color: "blue"
+    },
+    shoot: {
+        title: "Shoot with Spacebar",
+        color: "orange"
+    },
+    life: {
+        title: "Health",
+        color: "red"
+    }
+}
 
 // ====================== SETUP FOR CANVAS RENDERING ======================= //
 
@@ -131,6 +151,27 @@ class Coin extends Entity {
         }
     };
 };
+
+class PowerUp extends Entity {
+    constructor(x, y, color, radius, title) {
+        super(x, y, color, radius);
+        this.color = color;
+        this.title = title;
+    };
+    collisionEffect() {
+        if (this.alive) {
+            this.alive = false;
+            if ( this.title.slice(0,5) === "Hover" || this.title.slice(0,5) === "Shoot" ) {
+                playerHasPower = true;
+                hero.powerUp = this.title;
+                hero.powerUpColor = this.color;
+            }
+            if ( this.title === "Health" ) {
+                playerLives += 1;
+            }
+        }
+    }
+}
 
 function Obstacle(y=game.height, color=0){
     this.color = color;
@@ -197,12 +238,14 @@ class Hero extends Entity {
     constructor(x, y, color, radius) {
         super(x, y, color, radius);
         this.gliderDirection = 'down';
+        this.powerUp = "None"
+        this.powerUpColor = "black";
     }
     render() {
         //set fillStyle to radial gradient
         const gradient = ctx.createRadialGradient(this.x,this.y,this.radius/2, this.x,this.y,this.radius)
         gradient.addColorStop(0, 'black');
-        gradient.addColorStop(.3, `${weaponRecharge?'orange':'black'}`);
+        gradient.addColorStop(.3, this.powerUpColor);
         gradient.addColorStop(1, 'black');
         this.fillStyle = gradient;
         //then render
@@ -237,7 +280,8 @@ class Hero extends Entity {
 
 //The ground/goal
 function Ground() {
-    this.y = playerStartHeight*pixelRatio+hero.radius*4;
+    this.y = playerStartHeight*pixelRatio+hero.radius*4+game.height;
+    this.radius = game.height;
     this.alive = true;
     this.collisionData = function () {
         return [
@@ -285,7 +329,7 @@ function updateDisplay() {
     height.innerText = `Height: ${playerStartHeight - Math.round(playerDistance/pixelRatio)}m`;
     lives.innerText = `Lives: ${playerLives}`;
     score.innerText = `Score: ${playerScore}`;
-    powerUps.innerText = `Power Up: ${playerPowerUps}`;
+    powerUps.innerText = `Power Up: ${hero.powerUp}`;
     status.innerText = playerStatus;
 };
 
@@ -332,6 +376,10 @@ function manageGlide() {
     }
 };
 
+function managePowerUp() {
+    
+}
+
 function gameStart() {
     //set obstacles
     for (let i=0; i<platformCount; i++) {
@@ -351,6 +399,19 @@ function gameStart() {
                 'yellow', 15);
                 entityArray.push(aCoin);
             }
+        }
+    }
+    //set power-ups
+    for (let i=0; i<platformCount; i++) {
+        //random number of power-ups
+        const powerUpSpawn = Math.floor(Math.random()*powerUpSpawnFrequency);
+        if (!powerUpSpawn) {
+            const thePowers = Object.keys(powerUpList);
+            const key = thePowers[Math.floor(Math.random()*thePowers.length)];
+            const aPower = new PowerUp(game.width/2,
+                (i)*obstacleSeparation+game.height-obstacleSeparation/3,
+                powerUpList[key].color, 20, powerUpList[key].title);
+            entityArray.push(aPower);
         }
     }
     //set ground
@@ -376,18 +437,12 @@ function gameEnd(endStatus) {
 function movementHandler(e) {
     if(gameOn){
         if (e.which === 65) {
-            //player can only turn if the glider is out
-            if (playerGlider) {
-                hero.gliderDirection = 'left';
-            }
+            hero.gliderDirection = 'left';
         }
         if (e.which === 68) {
-            //player can only turn if the glider is out
-            if (playerGlider) {
-                hero.gliderDirection = 'right';
-            } 
+            hero.gliderDirection = 'right';
         }
-        if (e.which === 32) {
+        if (e.which === 87) {
             if (playerGlider){
                 playerGlider = false;
                 //hop the player upward
@@ -395,6 +450,20 @@ function movementHandler(e) {
             } else {
                 playerGlider = true;
                 glideReleaseSpeed = playerGliderSpeed;
+            }
+        }
+        if (e.which === 83) {
+            if (playerGlider){
+                playerGlider = false;
+                //no hop, just release
+            } else {
+                playerGlider = true;
+                glideReleaseSpeed = playerGliderSpeed;
+            }
+        }
+        if (e.which === 32) {
+            if (playerHasPower) {
+
             }
         }
     }
@@ -410,6 +479,7 @@ easyButton.addEventListener('click', () => {
     playerStartHeight = difficultyOptions.easy.playerStartHeight;
     platformCount = difficultyOptions.easy.platformCount;
     playerLives = difficultyOptions.easy.playerLives;
+    powerUpSpawnFrequency = difficultyOptions.easy.powerUpSpawnFrequency;
     //swap windows
     startScreen.className = "hidden";
     powerUps.className = "unhidden";
@@ -422,6 +492,7 @@ hardButton.addEventListener('click', () => {
     playerStartHeight = difficultyOptions.hard.playerStartHeight;
     platformCount = difficultyOptions.hard.platformCount;
     playerLives = difficultyOptions.hard.playerLives;
+    powerUpSpawnFrequency = difficultyOptions.hard.powerUpSpawnFrequency;
     //swap windows
     startScreen.className = "hidden";
     powerUps.className = "unhidden";
@@ -434,6 +505,7 @@ impossibleButton.addEventListener('click', () => {
     playerStartHeight = difficultyOptions.impossible.playerStartHeight;
     platformCount = difficultyOptions.impossible.platformCount;
     playerLives = difficultyOptions.impossible.playerLives;
+    powerUpSpawnFrequency = difficultyOptions.impossible.powerUpSpawnFrequency;
     //swap windows
     startScreen.className = "hidden";
     powerUps.className = "unhidden";
