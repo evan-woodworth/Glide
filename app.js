@@ -138,12 +138,13 @@ function Obstacle(y=game.height, color=0){
     this.width = game.width / this.segmentCount;
     this.segments = Array(this.segmentCount).fill(false);
     this.y = y;
+    this.radius = 10;
     this.alive = true;
     this.render = function() {
         ctx.fillStyle = this.color;
         for (let i=0; i<this.segments.length; i++) {
             if (this.segments[i]) {
-                ctx.fillRect(this.width*i,this.y,this.width,20);
+                ctx.fillRect(this.width*i,this.y-this.radius,this.width,this.radius*2);
             }
         }
     };
@@ -309,8 +310,8 @@ function manageHeight(){
         for (let i=0; i<entityArray.length; i++) {
             entityArray[i].y += fallDistance;
             //check for collision
-            if (entityArray[i].y < hero.y + hero.radius
-                && entityArray[i].y > hero.y - hero.radius
+            if (   (entityArray[i].y - entityArray[i].radius) < (hero.y + hero.radius)
+                && (entityArray[i].y + entityArray[i].radius) > (hero.y - hero.radius)
                 && !ghostMode) {
                     if (detectCollision(entityArray[i].collisionData()) ) {
                         entityArray[i].collisionEffect();
