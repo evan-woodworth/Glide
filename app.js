@@ -49,6 +49,7 @@ console.log(`player fall speed: ${playerMaxFallSpeed}`); //25.3 at 10px/50ms loo
 let playerFallSpeed = -playerMaxFallSpeed;
 const playerGliderSpeed = playerMaxFallSpeed-5;
 let glideReleaseSpeed = playerGliderSpeed;
+const powerHoverSpeed = playerMaxFallSpeed - playerGliderSpeed;
 
 //game management variables
 let gameOn = false;
@@ -61,6 +62,7 @@ let entityArray = []; //all non-unique entities should be stored here
 let difficulty = 'easy';
 let ghostMode = false;
 let gameOver = false;
+let powerHoverOn = false;
 
 const difficultyOptions = {
     easy: {
@@ -297,7 +299,7 @@ function Ground() {
     };
     this.render = function () {
         ctx.fillStyle = '#9b5513';
-        ctx.fillRect(0,this.y,game.width,game.height);
+        ctx.fillRect(0,this.y-this.radius,game.width,game.height);
     };
 }
 
@@ -346,6 +348,7 @@ function manageHeight(){
     }
     let fallDistance = Number(`${playerFall?playerFallSpeed:0}`) 
                      + Number(`${playerGust?playerGustSpeed:0}`)
+                     + Number(`${powerHoverOn?powerHoverSpeed:0}`)
                      + glideReleaseSpeed + playerFallModifier;
     //adjust background
     viewportY += fallDistance;
@@ -377,7 +380,12 @@ function manageGlide() {
 };
 
 function managePowerUp() {
-    
+    if ( hero.powerUp.slice(0,5) !== "Hover" ) {
+        powerHoverOn = false;
+    }
+    if ( hero.powerUp.slice(0,5) === "Shoot" ) {
+        
+    }
 }
 
 function gameStart() {
@@ -462,8 +470,13 @@ function movementHandler(e) {
             }
         }
         if (e.which === 32) {
-            if (playerHasPower) {
-
+            if ( hero.powerUp.slice(0,5) === "Hover" ) {
+                if ( powerHoverOn ) {
+                    powerHoverOn = false;
+                } else { powerHoverOn = true; }
+            }
+            if ( hero.powerUp.slice(0,5) === "Shoot" ) {
+                
             }
         }
     }
@@ -519,6 +532,7 @@ function gameLoop(){
     if (!gameOver) {
         manageHeight();
         manageGlide();
+        managePowerUp();
         clearCanvas();
         drawCanvas();
         updateDisplay();
