@@ -69,39 +69,11 @@ const difficultyOptions = {
     }
 };
 
-
 // ====================== SETUP FOR CANVAS RENDERING ======================= //
 
 const ctx = game.getContext('2d');
 game.setAttribute("height", getComputedStyle(game)["height"]);
 game.setAttribute("width", getComputedStyle(game)["width"]);
-
-// ====================== SETUP FOR CANVAS RENDERING ======================= //
-
-// ctx.fillStyle = 'white';
-// ctx.strokeStyle = 'red';
-// ctx.lineWidth = 5;
-
-// ctx.fillRect(10, 10, 100, 100);
-// ctx.strokeRect(10,10,100,100);
-
-// Create a radial gradient
-// The inner circle is at x=110, y=90, with radius=30
-// The outer circle is at x=100, y=100, with radius=70
-// var gradient = ctx.createRadialGradient(100,100,10, 100,100,20);
-
-// // Add three color stops
-// gradient.addColorStop(0, 'black');
-// gradient.addColorStop(.5, 'green');
-// gradient.addColorStop(1, 'black');
-
-// // Set the fill style and draw a rectangle
-// // ctx.fillStyle = gradient;
-// // ctx.fillRect(20, 20, 160, 160);
-// ctx.beginPath();
-// ctx.arc(100, 100, 20, 0, 2 * Math.PI);
-// ctx.fillStyle = gradient;
-// ctx.fill();
 
 // ====================== ENTITIES ======================= //
 
@@ -134,7 +106,16 @@ class Entity{
     collisionEffect() {
         console.log('hit entity');
     };
-}
+};
+
+class Coin extends Entity {
+    collisionEffect() {
+        if (this.alive) {
+            playerScore += 100;
+            this.alive = false;
+        }
+    };
+};
 
 function Obstacle(y=game.height, color=0){
     this.color = color;
@@ -142,7 +123,7 @@ function Obstacle(y=game.height, color=0){
     this.width = game.width / this.segmentCount;
     this.segments = Array(this.segmentCount).fill(false);
     this.y = y;
-    this.alive = false;
+    this.alive = true;
     this.render = function() {
         ctx.fillStyle = this.color;
         for (let i=0; i<this.segments.length; i++) {
@@ -194,7 +175,7 @@ function Obstacle(y=game.height, color=0){
             this.segments[Math.floor(Math.random()*this.segmentCount)] = true;
         }
     };
-}
+};
 
 class Hero extends Entity {
     constructor(x, y, color, radius) {
@@ -233,7 +214,7 @@ class Hero extends Entity {
             ctx.fill();
         }
     };
-}
+};
 
 var hero = new Hero(game.width/2, 100, 'black', 15);
 
@@ -241,7 +222,7 @@ var hero = new Hero(game.width/2, 100, 'black', 15);
 // CANVAS functions 
 function clearCanvas(){
     ctx.clearRect(0,0,game.width,game.height);
-}
+};
 function drawCanvas(){
     //draw background
 	game.style.backgroundPositionY = viewportY.toString()+'px';
@@ -250,7 +231,9 @@ function drawCanvas(){
     }
     //draw entities
     for (let i=0; i<entityArray.length; i++) {
-        entityArray[i].render();
+        if (entityArray[i].alive) {
+            entityArray[i].render();
+        }
     }
     //draw hero
     hero.render();
@@ -262,7 +245,7 @@ function updateDisplay() {
     score.innerText = `Score: ${playerScore}`;
     powerUps.innerText = `Power Up: ${playerPowerUps}`;
     status.innerText = playerStatus;
-}
+};
 
 //management functions
 
@@ -290,29 +273,42 @@ function manageHeight(){
         //keep track of distance traveled
         playerDistance -= fallDistance;
     }
-}
+};
 
 function manageGlide() {
     //if the player is not up against the edge of the screen, move in the direction of the glider
-    if ( hero.x + hero.radius < game.width 
-        && hero.x - hero.radius > 0 ) {
-            if (hero.gliderDirection === 'left') {
-                hero.x -= playerHorizontalSpeed;
-            } else if (hero.gliderDirection === 'right') {
-                hero.x += playerHorizontalSpeed;
-            }
-        }
-}
+    if ( hero.gliderDirection === 'left' && hero.x - hero.radius > 0 ) {
+        hero.x -= playerHorizontalSpeed;
+    } else if ( hero.gliderDirection === 'right' && hero.x + hero.radius < game.width ) {
+        hero.x += playerHorizontalSpeed;
+    }
+};
 
 function gameStart() {
+    //set obstacles
     for (let i=0; i<platformCount; i++) {
         const anObstacle = new Obstacle((i)*obstacleSeparation+game.height);
         anObstacle.initialize();
         entityArray.push(anObstacle);
     }
+    //set coins
+    for (let i=0; i<platformCount; i++) {
+        //random number of coin spots
+        const coinCount = Math.floor(Math.random()*5);
+        for (let j=0; j<coinCount; j++) {
+            //random chance of coin spawn at spot
+            if (Math.floor(Math.random()*2)%2) {
+                const aCoin = new Coin((game.width*(j+1))/(coinCount+1),
+                (i)*obstacleSeparation+game.height-obstacleSeparation/2,
+                'yellow', 15);
+                entityArray.push(aCoin);
+            }
+
+        }
+    }
     playerFallModifier = 0;
     gameOn = true;
-}
+};
 
 function gameEnd(endStatus) {
     //end the game
@@ -324,21 +320,7 @@ function gameEnd(endStatus) {
     //show endgame text
     powerUps.className = "hidden";
     endGameWindow.className = "unhidden";
-}
-
-// game.addEventListener("click", (e)=>{
-//     // clearCanvas();
-//     // console.log(e);
-//     // let newCrawler = new Crawler(e.offsetX, e.offsetY, "blue", 50, 50);
-//     // newCrawler.render();
-//     // crawlerArray.push(newCrawler);
-//     randomCrawler.x = e.offsetX;
-//     randomCrawler.y = e.offsetY;
-//     refreshCanvas();
-// });
-
-//  GUI 
-
+};
 
 //event listeners and keyboard interaction logic 
 function movementHandler(e) {
@@ -351,11 +333,11 @@ function movementHandler(e) {
         }
     }
     // key event codes - here https://keycode.info/
-}
+};
 
 resetButton.addEventListener('click', () => {
     location.reload();
-})
+});
 easyButton.addEventListener('click', () => {
     //intialize diffictulty settings
     obstacleSeparation = difficultyOptions.easy.obstacleSeparation;
@@ -367,7 +349,7 @@ easyButton.addEventListener('click', () => {
     powerUps.className = "unhidden";
     //start game
     gameStart();
-})
+});
 hardButton.addEventListener('click', () => {
     //intialize diffictulty settings
     obstacleSeparation = difficultyOptions.hard.obstacleSeparation;
@@ -379,7 +361,7 @@ hardButton.addEventListener('click', () => {
     powerUps.className = "unhidden";
     //start game
     gameStart();
-})
+});
 impossibleButton.addEventListener('click', () => {
     //intialize diffictulty settings
     obstacleSeparation = difficultyOptions.impossible.obstacleSeparation;
@@ -391,7 +373,7 @@ impossibleButton.addEventListener('click', () => {
     powerUps.className = "unhidden";
     //start game
     gameStart();
-})
+});
 
 // ====================== GAME PROCESSES ======================= //
 
@@ -404,8 +386,7 @@ function gameLoop(){
         updateDisplay();
         // console.log('game running')
     }
-
-}
+};
 
 // ====================== COLLISION DETECTION ======================= //
 
@@ -433,7 +414,7 @@ function detectCollision(collisionData) {
         }
     }
     return false;
-}
+};
 
 // ====================== PAINT INTIAL SCREEN ======================= //
 
@@ -441,6 +422,4 @@ function detectCollision(collisionData) {
 document.addEventListener("DOMContentLoaded", ()=>{
     document.addEventListener("keydown",movementHandler);
     const runGame = setInterval(gameLoop, 60);
-})
-
-
+});

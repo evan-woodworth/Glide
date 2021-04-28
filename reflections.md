@@ -20,7 +20,7 @@
 - [x] What did you achieve yesterday?
 - [x] What are your goals for today?
 - [x] Do you have any blockers?
-1. RESPONSE
+1. Background, scroll speed, obstacle object
 2. RESPONSE
 3. RESPONSE
 
@@ -28,7 +28,7 @@
 - [x] What did you achieve yesterday?
 - [x] What are your goals for today?
 - [x] Do you have any blockers?
-1. RESPONSE
+1. Obstacle generation and placement, player, player move
 2. RESPONSE
 3. RESPONSE
 
@@ -36,9 +36,9 @@
 - [x] What did you achieve yesterday?
 - [x] What are your goals for today?
 - [x] Do you have any blockers?
-1. RESPONSE
-2. RESPONSE
-3. RESPONSE
+1. Collision detection, start menu, game-over logic and screen, organization, render glider, set difficulty variables, glide management.
+2. Create collectibles for points, create enemies, create landing zone, bomb sequence
+3. none at this time
 
 # Thursday
 - [x] What did you achieve yesterday?
