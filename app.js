@@ -24,9 +24,7 @@ let platformCount = 75; //dependent on difficulty
 
 //height and speed variables
 let viewportY = 0;
-let playerHorizontalSpeed = 15
-let playerFallSpeed = -15;
-let playerGliderSpeed = 10;
+let playerHorizontalSpeed = 10
 let playerGustSpeed = 15;
 let playerFallModifier = -10;
 let playerFall = true;
@@ -34,6 +32,20 @@ let playerGlider = true;
 let playerGust = false;
 let playerStartHeight = 300; //dependent on difficulty
 const backgroundImageHeight = 480; //dependent on background image
+const loopSpeed = 50; //in milliseconds
+/*  100px = 1m
+    1 gameloop = loopSpeed ms
+    acceleration due to gravity = 9.8m/s
+    9.8(m/s)(100px/1m)(1s/1000ms)(loopSpeed/gameloop) = (playerAcceleration)px/gameloop
+    This is 49px/gameloop at 50ms loopSpeed. This is too fast, so setting to 10*/
+const playerAcceleration = 10; //49 at 50ms loopSpeed
+/*  terminal velocity (vT) of a human is roughly 50.6m/s
+    vT = 50.6(m/s)(100px/1m)(1s/1000ms)(loopSpeed/gameloop) = 253 px/gameloop at 50ms loopSpeed
+    That's too fast, so setting to 70*/
+const playerMaxFallSpeed = 70;
+let playerFallSpeed = -playerMaxFallSpeed;
+const playerGliderSpeed = playerMaxFallSpeed-5;
+let glideReleaseSpeed = playerGliderSpeed;
 
 //game management variables
 let gameOn = false;
@@ -192,27 +204,30 @@ class Hero extends Entity {
         //then render
         super.render();
         //then draw the glider
-        ctx.fillStyle = 'black';
-        //determine direction and render
-        if (this.gliderDirection === "down") {
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y-this.radius-5);
-            ctx.lineTo(this.x+this.radius+5, this.y-this.radius*2-5);
-            ctx.lineTo(this.x-this.radius-5, this.y-this.radius*2-5);
-            ctx.fill();
-        } else if (this.gliderDirection === "right") {
-            ctx.beginPath();
-            ctx.moveTo(this.x-this.radius-2, this.y-this.radius-5);
-            ctx.lineTo(this.x-this.radius+2, this.y-this.radius*2-5);
-            ctx.lineTo(this.x+this.radius+10, this.y-this.radius*2+5);
-            ctx.fill();
-        } else if (this.gliderDirection === "left") {
-            ctx.beginPath();
-            ctx.moveTo(this.x+this.radius+2, this.y-this.radius-5);
-            ctx.lineTo(this.x+this.radius-2, this.y-this.radius*2-5);
-            ctx.lineTo(this.x-this.radius-10, this.y-this.radius*2+5);
-            ctx.fill();
+        if (playerGlider) {
+            ctx.fillStyle = 'black';
+            //determine direction and render
+            if (this.gliderDirection === "down") {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y-this.radius-5);
+                ctx.lineTo(this.x+this.radius+5, this.y-this.radius*2-5);
+                ctx.lineTo(this.x-this.radius-5, this.y-this.radius*2-5);
+                ctx.fill();
+            } else if (this.gliderDirection === "right") {
+                ctx.beginPath();
+                ctx.moveTo(this.x-this.radius-2, this.y-this.radius-5);
+                ctx.lineTo(this.x-this.radius+2, this.y-this.radius*2-5);
+                ctx.lineTo(this.x+this.radius+10, this.y-this.radius*2+5);
+                ctx.fill();
+            } else if (this.gliderDirection === "left") {
+                ctx.beginPath();
+                ctx.moveTo(this.x+this.radius+2, this.y-this.radius-5);
+                ctx.lineTo(this.x+this.radius-2, this.y-this.radius*2-5);
+                ctx.lineTo(this.x-this.radius-10, this.y-this.radius*2+5);
+                ctx.fill();
+            }
         }
+
     };
 };
 
@@ -274,10 +289,16 @@ function updateDisplay() {
 
 function manageHeight(){
     //determine fall distance
+    if ( !playerGlider && glideReleaseSpeed > 0 ) {
+        glideReleaseSpeed -= playerAcceleration;
+        //until it reaches 0
+        if ( glideReleaseSpeed < 0 ) {
+            glideReleaseSpeed = 0;
+        }
+    }
     let fallDistance = Number(`${playerFall?playerFallSpeed:0}`) 
                      + Number(`${playerGust?playerGustSpeed:0}`)
-                     + Number(`${playerGlider?playerGliderSpeed:0}`)
-                     + playerFallModifier;
+                     + glideReleaseSpeed + playerFallModifier;
     //adjust background
     viewportY += fallDistance;
     if (gameOn) {
@@ -349,11 +370,21 @@ function gameEnd(endStatus) {
 //event listeners and keyboard interaction logic 
 function movementHandler(e) {
     if(gameOn){
-        if (e.which === 65){
+        if (e.which === 65) {
             hero.gliderDirection = 'left';
         }
-        if (e.which === 68){
+        if (e.which === 68) {
             hero.gliderDirection = 'right';
+        }
+        if (e.which === 32) {
+            if (playerGlider){
+                playerGlider = false;
+                //hop the player upward
+                glideReleaseSpeed += 50;
+            } else {
+                playerGlider = true;
+                glideReleaseSpeed = playerGliderSpeed;
+            }
         }
     }
     // key event codes - here https://keycode.info/
@@ -445,5 +476,5 @@ function detectCollision(collisionData) {
 // Event Listener
 document.addEventListener("DOMContentLoaded", ()=>{
     document.addEventListener("keydown",movementHandler);
-    const runGame = setInterval(gameLoop, 60);
+    const runGame = setInterval(gameLoop, loopSpeed);
 });
