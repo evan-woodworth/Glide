@@ -26,23 +26,26 @@ let platformCount = 75; //dependent on difficulty
 let viewportY = 0;
 let playerHorizontalSpeed = 10
 let playerGustSpeed = 15;
-let playerFallModifier = -10;
+let playerFallModifier = 0;
 let playerFall = true;
-let playerGlider = true;
+let playerGlider = false;
 let playerGust = false;
+const pixelRatio = 10; //pixel to meter ratio
 let playerStartHeight = 300; //dependent on difficulty
 const backgroundImageHeight = 480; //dependent on background image
 const loopSpeed = 50; //in milliseconds
-/*  100px = 1m
+/*  1 pixelRatio = 1m
     1 gameloop = loopSpeed ms
     acceleration due to gravity = 9.8m/s
-    9.8(m/s)(100px/1m)(1s/1000ms)(loopSpeed/gameloop) = (playerAcceleration)px/gameloop
-    This is 49px/gameloop at 50ms loopSpeed. This is too fast, so setting to 10*/
-const playerAcceleration = 10; //49 at 50ms loopSpeed
+    9.8(m/s)(1 pixelRatio / 1m)(1s / 1000ms)(loopSpeed / gameloop) = (playerAcceleration)px / gameloop
+    This is 4.9px/gameloop at 50ms loopSpeed. This is too fast, so setting to 10*/
+const playerAcceleration = 9.8*(pixelRatio)*(1/1000)*(loopSpeed);
+console.log(`player acceleration: ${playerAcceleration}`); //4.9 at 10px/50ms loopSpeed
 /*  terminal velocity (vT) of a human is roughly 50.6m/s
-    vT = 50.6(m/s)(100px/1m)(1s/1000ms)(loopSpeed/gameloop) = 253 px/gameloop at 50ms loopSpeed
+    vT = 50.6(m/s)(pixelRatio px / 1m)(1s / 1000ms)(loopSpeed / gameloop) = 25.3 px/gameloop at 10px / 50ms loopSpeed
     That's too fast, so setting to 70*/
-const playerMaxFallSpeed = 70;
+const playerMaxFallSpeed = 50.6*(pixelRatio)*(1/1000)*(loopSpeed);
+console.log(`player fall speed: ${playerMaxFallSpeed}`); //25.3 at 10px/50ms loopSpeed
 let playerFallSpeed = -playerMaxFallSpeed;
 const playerGliderSpeed = playerMaxFallSpeed-5;
 let glideReleaseSpeed = playerGliderSpeed;
@@ -61,21 +64,21 @@ const difficultyOptions = {
     easy: {
         title: 'Easy',
         obstacleSeparation: 400,
-        playerStartHeight: 200,
+        playerStartHeight: 2000,
         platformCount: 50,
         playerLives: 5
     },
     hard: {
         title: 'Hard',
         obstacleSeparation: 300,
-        playerStartHeight: 500,
+        playerStartHeight: 5000,
         platformCount: 170,
         playerLives: 3
     },
     impossible: {
         title: 'Impossible',
         obstacleSeparation: 200,
-        playerStartHeight: 1000,
+        playerStartHeight: 10000,
         platformCount: 500,
         playerLives: 1
     }
@@ -204,7 +207,7 @@ class Hero extends Entity {
         //then render
         super.render();
         //then draw the glider
-        if (playerGlider) {
+        if (playerGlider || this.gliderDirection === "down") {
             ctx.fillStyle = 'black';
             //determine direction and render
             if (this.gliderDirection === "down") {
@@ -233,7 +236,7 @@ class Hero extends Entity {
 
 //The ground/goal
 function Ground() {
-    this.y = playerStartHeight*100+hero.radius*4;
+    this.y = playerStartHeight*pixelRatio+hero.radius*4;
     this.alive = true;
     this.collisionData = function () {
         return [
@@ -278,7 +281,7 @@ function drawCanvas(){
 };
 
 function updateDisplay() {
-    height.innerText = `Height: ${playerStartHeight - Math.round(playerDistance/100)}m`;
+    height.innerText = `Height: ${playerStartHeight - Math.round(playerDistance/pixelRatio)}m`;
     lives.innerText = `Lives: ${playerLives}`;
     score.innerText = `Score: ${playerScore}`;
     powerUps.innerText = `Power Up: ${playerPowerUps}`;
@@ -351,7 +354,8 @@ function gameStart() {
     }
     //set ground
     entityArray.push(new Ground);
-    playerFallModifier = 0;
+    playerGlider = true;
+    glideReleaseSpeed = playerGliderSpeed;
     gameOn = true;
 };
 
@@ -371,16 +375,22 @@ function gameEnd(endStatus) {
 function movementHandler(e) {
     if(gameOn){
         if (e.which === 65) {
-            hero.gliderDirection = 'left';
+            //player can only turn if the glider is out
+            if (playerGlider) {
+                hero.gliderDirection = 'left';
+            }
         }
         if (e.which === 68) {
-            hero.gliderDirection = 'right';
+            //player can only turn if the glider is out
+            if (playerGlider) {
+                hero.gliderDirection = 'right';
+            } 
         }
         if (e.which === 32) {
             if (playerGlider){
                 playerGlider = false;
                 //hop the player upward
-                glideReleaseSpeed += 50;
+                glideReleaseSpeed += 25;
             } else {
                 playerGlider = true;
                 glideReleaseSpeed = playerGliderSpeed;
