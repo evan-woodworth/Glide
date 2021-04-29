@@ -24,7 +24,8 @@ let platformCount = 75; //dependent on difficulty
 
 //height and speed variables
 let viewportY = 0;
-let playerHorizontalSpeed = 10
+let playerHorizontalSpeed = 10;
+let shotSpeed = 20;
 let playerGustSpeed = 15;
 let playerFallModifier = 0;
 let playerFall = true;
@@ -59,6 +60,7 @@ let powerUpSpawnFrequency = 0; //dependent on difficulty
 let playerHasPower = false;
 let powerColor = 'orange';
 let entityArray = []; //all non-unique entities should be stored here
+let shotArray = []; //stores all active shots fired
 let difficulty = 'easy';
 let ghostMode = false;
 let gameOver = false;
@@ -104,7 +106,7 @@ const powerUpList = {
         title: "Health",
         color: "red"
     }
-}
+};
 
 // ====================== SETUP FOR CANVAS RENDERING ======================= //
 
@@ -157,7 +159,6 @@ class Coin extends Entity {
 class PowerUp extends Entity {
     constructor(x, y, color, radius, title) {
         super(x, y, color, radius);
-        this.color = color;
         this.title = title;
     };
     collisionEffect() {
@@ -173,7 +174,7 @@ class PowerUp extends Entity {
             }
         }
     }
-}
+};
 
 function Obstacle(y=game.height, color=0){
     this.color = color;
@@ -207,7 +208,15 @@ function Obstacle(y=game.height, color=0){
         return theData;
     };
     this.collisionEffect = function () {
-        gameEnd('Lose');
+        if ( playerLives ) {
+            playerLives--;
+            //release glider
+            playerGlider = false;
+            //hop the player upward
+            glideReleaseSpeed += 40;
+        } else {
+            gameEnd('Lose');
+        }
     }
     this.initialize = function() {
         this.segmentCount = (Math.floor(Math.random()*4)+2)
@@ -280,9 +289,16 @@ class Hero extends Entity {
     };
 };
 
+class Shot extends Entity {
+    constructor(x, y, color, radius, direction) {
+        super(x, y, color, radius);
+        this.direction = direction;
+    }
+};
+
 //The ground/goal
 function Ground() {
-    this.y = playerStartHeight*pixelRatio+hero.radius*4+game.height;
+    this.y = (playerStartHeight+4)*pixelRatio+hero.radius*4+game.height;
     this.radius = game.height;
     this.alive = true;
     this.collisionData = function () {
@@ -301,7 +317,7 @@ function Ground() {
         ctx.fillStyle = '#9b5513';
         ctx.fillRect(0,this.y-this.radius,game.width,game.height);
     };
-}
+};
 
 //Create the hero!
 var hero = new Hero(game.width/2, 100, 'black', 15);
@@ -311,6 +327,7 @@ var hero = new Hero(game.width/2, 100, 'black', 15);
 function clearCanvas(){
     ctx.clearRect(0,0,game.width,game.height);
 };
+
 function drawCanvas(){
     //draw background
 	game.style.backgroundPositionY = viewportY.toString()+'px';
@@ -321,6 +338,12 @@ function drawCanvas(){
     for (let i=0; i<entityArray.length; i++) {
         if (entityArray[i].alive) {
             entityArray[i].render();
+        }
+    }
+    //draw shots
+    if ( shotArray.length ) {
+        for (let i=0; i<shotArray.length; i++) {
+            shotArray[i].render();
         }
     }
     //draw hero
@@ -353,6 +376,10 @@ function manageHeight(){
     //adjust background
     viewportY += fallDistance;
     if (gameOn) {
+        //adjust shot height
+        for (let i=0; i<shotArray.length; i++) {
+            shotArray[i].y += fallDistance;
+        }
         //adjust entity heights
         for (let i=0; i<entityArray.length; i++) {
             entityArray[i].y += fallDistance;
@@ -360,7 +387,7 @@ function manageHeight(){
             if (   (entityArray[i].y - entityArray[i].radius) < (hero.y + hero.radius)
                 && (entityArray[i].y + entityArray[i].radius) > (hero.y - hero.radius)
                 && !ghostMode) {
-                    if (detectCollision(entityArray[i].collisionData()) ) {
+                    if (detectCollision(hero, entityArray[i].collisionData()) ) {
                         entityArray[i].collisionEffect();
                     }
                 }
@@ -383,10 +410,31 @@ function managePowerUp() {
     if ( hero.powerUp.slice(0,5) !== "Hover" ) {
         powerHoverOn = false;
     }
-    if ( hero.powerUp.slice(0,5) === "Shoot" ) {
-        
+    if ( shotArray.length ) {
+        //move the shots
+        for (let i=0; i<shotArray.length; i++) {
+            if ( shotArray[i].direction === "left" ) {
+                shotArray[i].x -= shotSpeed;
+            } else { shotArray[i].x += shotSpeed; }
+        }
+        //clean up shots
+        while ( shotArray[0].x < 0 || shotArray[0].x > game.width ) {
+            shotArray.shift();
+        }
+        //detect hits
+        for (let i=0; i<shotArray.length; i++) {
+            for (let j=0; j<entityArray.length; j++) {
+                if (   (entityArray[j].y - entityArray[j].radius) < (shotArray[i].y + shotArray[i].radius)
+                    && (entityArray[j].y + entityArray[j].radius) > (shotArray[i].y - shotArray[i].radius)) {
+                    if ( entityArray[j].constructor.name !== "Obstacle"
+                      && detectCollision(shotArray[i], entityArray[j].collisionData()) ) {
+                        entityArray[j].collisionEffect();
+                    }
+                }
+            }
+        }
     }
-}
+};
 
 function gameStart() {
     //set obstacles
@@ -433,7 +481,7 @@ function gameEnd(endStatus) {
     //end the game
     gameOn = false;
     gameOver = true;
-    clearInterval();
+    // clearInterval();
     //set endgame text
     endGameText.innerText = `You ${endStatus}! Play again?`;
     //show endgame text
@@ -475,8 +523,10 @@ function movementHandler(e) {
                     powerHoverOn = false;
                 } else { powerHoverOn = true; }
             }
-            if ( hero.powerUp.slice(0,5) === "Shoot" ) {
-                
+            if ( hero.powerUp.slice(0,5) === "Shoot" 
+                && hero.gliderDirection !== "down" ) {
+                const aShot = new Shot(hero.x, hero.y, 'orange', hero.radius/2, hero.gliderDirection);
+                shotArray.push(aShot);
             }
         }
     }
@@ -542,22 +592,22 @@ function gameLoop(){
 
 // ====================== COLLISION DETECTION ======================= //
 
-function detectCollision(collisionData) {
+function detectCollision(obj1, collisionData) {
     for (let i=0; i<collisionData.length; i++) {
-        const obst = collisionData[i];
+        const obj2 = collisionData[i];
         //if in range of collision
-        if (   (hero.x + hero.radius) > obst.x1 
-            && (hero.x - hero.radius) < obst.x2 ) {
+        if (   (obj1.x + obj1.radius) > obj2.x1 
+            && (obj1.x - obj1.radius) < obj2.x2 ) {
             //if over corner
-            if (hero.x < obst.x1 || hero.x > obst.x2) {
+            if (obj1.x < obj2.x1 || obj1.x > obj2.x2) {
                 //c^2 = a^2 + b^2
                 //c = sqrt(a^2 + b^2)
-                const dy = hero.y - obst.y;
-                const dx1 = hero.x - obst.x1;
-                const dx2 = hero.x - obst.x2;
+                const dy = obj1.y - obj2.y;
+                const dx1 = obj1.x - obj2.x1;
+                const dx2 = obj1.x - obj2.x2;
                 const distance1 = Math.sqrt(dx1*dx1+dy*dy);
                 const distance2 = Math.sqrt(dx2*dx2+dy*dy);
-                if (distance1 < hero.radius || distance2 < hero.radius ) {
+                if (distance1 < obj1.radius || distance2 < obj1.radius ) {
                     return true;
                 }
             } else {
