@@ -72,15 +72,7 @@ const playerGliderSpeed = playerMaxFallSpeed-5; //player fall speed is significa
 
 This portion of the ```manageHeight()``` function accounts for acceleration as the glider is stowed, causing the player's speed to change with each iteration of the game loop, until terminal velocity is reached:
 
-```json
-    if ( !playerGlider && glideReleaseSpeed > 0 ) {
-        glideReleaseSpeed -= playerAcceleration;
-        //until it reaches 0
-        if ( glideReleaseSpeed < 0 ) {
-            glideReleaseSpeed = 0;
-        }
-    }
-```
+![Glide Release](img/readme-images/glide-release.png)
 
 ## Collision Detection
 
