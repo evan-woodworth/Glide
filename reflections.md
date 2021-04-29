@@ -44,9 +44,9 @@
 - [x] What did you achieve yesterday?
 - [x] What are your goals for today?
 - [x] Do you have any blockers?
-1. RESPONSE
-2. RESPONSE
-3. RESPONSE
+1. Collectibles (coins), landing zone, glider release, tweak fall math, pixel ratio, update to obstacle locations and collision detection upper bounds, power-up array, power-up spawns, power-up collection, hover power-up, weapon power-up, shot tracking, shot collision, player lives.
+2. README, deploy, possible minor tweaks
+3. Not at this time
 
 # Friday
 - [x] What did you achieve yesterday?

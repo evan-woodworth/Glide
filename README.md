@@ -1,6 +1,6 @@
-# Title of Game
+# GLIDE!
 
-Explanation of the game that was built and the deployed link will go here.
+Glide ever downwards and reach the ground. Avoid the platforms, get power-ups, collect coins, get scored, and survive!
 
 # HOW TO PLAY
 
