@@ -38,19 +38,17 @@ const loopSpeed = 50; //in milliseconds
 /*  1 pixelRatio = 1m
     1 gameloop = loopSpeed ms
     acceleration due to gravity = 9.8m/s
-    9.8(m/s)(1 pixelRatio / 1m)(1s / 1000ms)(loopSpeed / gameloop) = (playerAcceleration)px / gameloop
-    This is 4.9px/gameloop at 50ms loopSpeed. This is too fast, so setting to 10*/
+    9.8(m/s)(1 pixelRatio / 1m)(1s / 1000ms)(loopSpeed / gameloop) = (playerAcceleration)px / gameloop */
 const playerAcceleration = 9.8*(pixelRatio)*(1/1000)*(loopSpeed);
 console.log(`player acceleration: ${playerAcceleration}`); //4.9 at 10px/50ms loopSpeed
 /*  terminal velocity (vT) of a human is roughly 50.6m/s
-    vT = 50.6(m/s)(pixelRatio px / 1m)(1s / 1000ms)(loopSpeed / gameloop) = 25.3 px/gameloop at 10px / 50ms loopSpeed
-    That's too fast, so setting to 70*/
+    vT = 50.6(m/s)(pixelRatio px / 1m)(1s / 1000ms)(loopSpeed / gameloop) = 25.3 px/gameloop at 10px / 50ms loopSpeed */
 const playerMaxFallSpeed = 50.6*(pixelRatio)*(1/1000)*(loopSpeed);
 console.log(`player fall speed: ${playerMaxFallSpeed}`); //25.3 at 10px/50ms loopSpeed
 let playerFallSpeed = -playerMaxFallSpeed;
 const playerGliderSpeed = playerMaxFallSpeed-5;
 let glideReleaseSpeed = playerGliderSpeed;
-const powerHoverSpeed = playerMaxFallSpeed - playerGliderSpeed;
+const powerHoverSpeed = playerMaxFallSpeed - playerGliderSpeed; //player fall speed is significantly reduced by the glider
 
 //game management variables
 let gameOn = false;
@@ -116,7 +114,7 @@ game.setAttribute("width", getComputedStyle(game)["width"]);
 
 // ====================== ENTITIES ======================= //
 
-class Entity{
+class Entity {
     constructor(x, y, color, radius) {
         this.x = x;
         this.y = y;
@@ -176,7 +174,7 @@ class PowerUp extends Entity {
     }
 };
 
-function Obstacle(y=game.height, color=0){
+function Obstacle(y=game.height, color=0) {
     this.color = color;
     this.segmentCount = 5;
     this.width = game.width / this.segmentCount;
@@ -324,11 +322,11 @@ var hero = new Hero(game.width/2, 100, 'black', 15);
 
 // ====================== HELPER FUNCTIONS ======================= //
 // CANVAS functions 
-function clearCanvas(){
+function clearCanvas() {
     ctx.clearRect(0,0,game.width,game.height);
 };
 
-function drawCanvas(){
+function drawCanvas() {
     //draw background
 	game.style.backgroundPositionY = viewportY.toString()+'px';
     if (viewportY <= -backgroundImageHeight){
@@ -360,7 +358,7 @@ function updateDisplay() {
 
 //management functions
 
-function manageHeight(){
+function manageHeight() {
     //determine fall distance
     if ( !playerGlider && glideReleaseSpeed > 0 ) {
         glideReleaseSpeed -= playerAcceleration;
@@ -578,7 +576,7 @@ impossibleButton.addEventListener('click', () => {
 
 // ====================== GAME PROCESSES ======================= //
 
-function gameLoop(){
+function gameLoop() {
     if (!gameOver) {
         manageHeight();
         manageGlide();
