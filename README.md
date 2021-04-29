@@ -106,6 +106,8 @@ Then, the ```manageGlide()``` function keeps the player moving in the same direc
 
 ## Power-ups
 
+![Shots Fired](img/readme-images/shots-fired.png)
+
 Power-ups spawn randomly through-out the game, and the player can have one active power-up at a time. The player uses a power-up by pressing the spacebar, which either toggles an effect or creates a new entity, depending on the active power-up.
 
 ![Power Usage](img/readme-images/power-usage.png)
