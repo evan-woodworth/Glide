@@ -211,9 +211,9 @@ function Obstacle(y=game.height, color=0) {
             //release glider
             playerGlider = false;
             //hop the player upward
-            glideReleaseSpeed += 70;
+            glideReleaseSpeed += 75;
             ghostMode = true;
-            setTimeout(()=>{ghostMode=false;},600);
+            setTimeout(()=>{ghostMode=false;},1000);
         } else {
             gameEnd('Lose');
         }
