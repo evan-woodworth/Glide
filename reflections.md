@@ -49,10 +49,7 @@
 3. Not at this time
 
 # Friday
-- [x] What did you achieve yesterday?
-- [x] What are your goals for today?
-- [x] Do you have any blockers?
-1. RESPONSE
-2. RESPONSE
-3. RESPONSE
-
+1. What HTML, CSS, and or JavaScript skills you learned while building your game?
+- I learned how to hide and show things with html and css, and really delved into HTML canvas quite a bit. I solidified my understanding of classes and factory functions in JavaScript, as well as timing and program flow concepts.
+2. What's one topic you want to spend more practice on?
+- CSS has continued to be a rough area for me. I understand the basics just fine, but there have been a lot of random issues that pop out of the blue, which I struggle to overcome.
