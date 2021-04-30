@@ -211,7 +211,9 @@ function Obstacle(y=game.height, color=0) {
             //release glider
             playerGlider = false;
             //hop the player upward
-            glideReleaseSpeed += 40;
+            glideReleaseSpeed += 60;
+            ghostMode = true;
+            setTimeout(()=>{ghostMode=false;},500);
         } else {
             gameEnd('Lose');
         }
@@ -392,6 +394,10 @@ function manageHeight() {
         }
         //keep track of distance traveled
         playerDistance -= fallDistance;
+        //check lives
+        if ( playerLives<=0 ) {
+            gameEnd('Lose');
+        }
     }
 };
 
